@@ -4,6 +4,8 @@
 #include "Alien.h"
 #include "Components/StaticMeshComponent.h"
 #include "DamageInterface.h"
+#include "Predator.h"
+#include "PredatorProjectile.h"
 #include "Components/ArrowComponent.h"
 
 AAlien::AAlien()
@@ -40,10 +42,29 @@ void AAlien::BeginPlay()
 
 void AAlien::OnAlienHit_Implementation(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
 {
-	MyGooEvent.Broadcast(true, 15.0f);
-	if (OtherActor->Implements<UDamageInterface>())
+	if (!OtherActor) return;
+
+	if (Cast<APredatorProjectile>(OtherActor))
 	{
-		IDamageInterface::Execute_TakeLivingDamage(OtherActor);
+		if (GEngine)
+			GEngine->AddOnScreenDebugMessage(INDEX_NONE, 3.0f, FColor::Red, TEXT("Alien: Hit by projectile!"));
+		
+		Destroy();
+	}
+	else if (Cast<APredator>(OtherActor))
+	{
+		MyGooEvent.Broadcast(true, 15.0f);
+		
+		if (OtherActor->Implements<UDamageInterface>())
+		{
+			IDamageInterface::Execute_TakeLivingDamage(OtherActor);
+		}
+
+		FVector NewScale = GetActorScale() * 1.5f;
+		SetActorScale3D(NewScale);
+
+		if (GEngine)
+			GEngine->AddOnScreenDebugMessage(INDEX_NONE, 3.0f, FColor::Green, TEXT("Alien: Eaten by Predator!"));
 	}
 }
 

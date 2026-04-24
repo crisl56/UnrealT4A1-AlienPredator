@@ -10,13 +10,45 @@
 /**
  * 
  */
+
+class APredatorProjectile;
+class AAlien;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPredatorCharged, APredator*, Predator);
+
 UCLASS()
 class ALIENVPREDATOR_API APredator : public ALivingOrganism , public IDamageInterface
 {
 	GENERATED_BODY()
 
 public:
+	APredator();
 
-	void TakeLivingDamage_Implementation() override;
+	virtual void TakeLivingDamage_Implementation() override;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Predator | Events")
+	FOnPredatorCharged OnPredatorCharged;
+	
+protected:
+	virtual void BeginPlay() override;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Predator | Combat")
+	float ChargeTime;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Predator | Combat")
+	float shootRadius;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Predator | Combat")
+	TSubclassOf<APredatorProjectile> ProjectileClass;
+	
+private:
+	FTimerHandle ChargeTimerHandle;
+	
+	UFUNCTION()
+	void OnChargeComplete();
+	
+	AAlien* FindNearestAlien() const;
+	
+	void FireAtAlien(AAlien* TargetAlien);
 	
 };
